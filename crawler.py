@@ -4,13 +4,25 @@ from urllib.parse import urljoin
 import re
 import nltk
 import pymysql
-from secret_settings import *
+from secret_settings import password_db
 
 
+def insert_pagina(url):
+    global password_db
+    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice', autocommit=True) 
+    cursor = conexao.cursor()
+    cursor.execute('insert into urls (url) values (%s)', url)
+    idpagina = cursor.lastrowid
+    cursor.close()
+    conexao.close()
+    
+    return idpagina
+    
+    
 def pagina_indexada(url):
     global password_db
-    retorno = -1 #não existe a pagina
     conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice')   
+    retorno = -1 #não existe a pagina
     cursor_url = conexao.cursor()
     cursor_url.execute('select idurl from urls where url = %s', url)
     if cursor_url.rowcount > 0:
@@ -76,5 +88,3 @@ def crawl(paginas, profundidade):
             
             
 lista_paginas = ['https://pt.wikipedia.org/wiki/Linguagem_de_programa%C3%A7%C3%A3o']
-crawl(lista_paginas, 2),
-pagina_indexada('texto')

@@ -3,6 +3,12 @@ import urllib3
 from urllib.parse import urljoin
 
 
+def get_texto(sopa):
+    for tags in sopa(['script', 'style']):
+        tags.decompose
+    return ' '.join(sopa.stripped_strings)
+
+
 def crawl(paginas, profundidade):
     for i in range(profundidade):
         novas_paginas = set()

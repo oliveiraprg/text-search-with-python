@@ -3,6 +3,30 @@ import urllib3
 from urllib.parse import urljoin
 import re
 import nltk
+import pymysql
+from secret_settings import *
+
+
+def pagina_indexada(url):
+    global password_db
+    retorno = -1 #não existe a pagina
+    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice')   
+    cursor_url = conexao.cursor()
+    cursor_url.execute('select idurl from urls where url = %s', url)
+    if cursor_url.rowcount > 0:
+        idurl = cursor_url.fetchone()[0]
+        cursor_palavra = conexao.cursor()
+        cursor_palavra.execute('select idurl from palavra_localizacao where idurl = %s', idurl)
+        if cursor_palavra.rowcount > 0:
+            retorno = -2 # Existe pagina com palavras cadastradas
+        else:
+            retorno = idurl # existe a pagina sem palavras
+        cursor_palavra.close()
+    
+    cursor_url.close()
+    conexao.close()
+    
+    return retorno
 
 
 def separa_palavras(texto):
@@ -52,4 +76,5 @@ def crawl(paginas, profundidade):
             
             
 lista_paginas = ['https://pt.wikipedia.org/wiki/Linguagem_de_programa%C3%A7%C3%A3o']
-crawl(lista_paginas, 2)
+crawl(lista_paginas, 2),
+pagina_indexada('texto')

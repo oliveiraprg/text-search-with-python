@@ -7,6 +7,18 @@ import pymysql
 from secret_settings import password_db
 
 
+def insere_palavra_localizacao(idurl, idpalavra, localizacao):
+    global password_db
+    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice', autocommit=True) 
+    cursor = conexao.cursor()
+    cursor.execute('insert into palavra_localizacao (idurl, idpalavra, localizacao) values (%s, %s, %s)', (idurl, idpalavra, localizacao))
+    idpalavra_localizacao = cursor.lastrowid
+    cursor.close()
+    conexao.close()
+    
+    return idpalavra_localizacao
+
+
 def insere_palavra(palavra):
     global password_db
     conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice', autocommit=True) 

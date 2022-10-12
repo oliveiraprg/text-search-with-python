@@ -7,6 +7,18 @@ import pymysql
 from secret_settings import password_db
 
 
+def insere_palavra(palavra):
+    global password_db
+    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice', autocommit=True) 
+    cursor = conexao.cursor()
+    cursor.execute('insert into palavras (palavra) values (%s)', palavra)
+    idpalavra = cursor.lastrowid
+    cursor.close()
+    conexao.close()
+    
+    return idpalavra
+
+
 def palavra_indexada(palavra):
     retorno = -1 #não existe a palavra no indice
     global password_db
@@ -21,7 +33,7 @@ def palavra_indexada(palavra):
     return retorno
 
 
-def insert_pagina(url):
+def insere_pagina(url):
     global password_db
     conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice', autocommit=True) 
     cursor = conexao.cursor()

@@ -9,9 +9,10 @@ from secret_settings import password_db
 
 def insere_palavra_localizacao(idurl, idpalavra, localizacao):
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice', autocommit=True) 
+    conexao = pymysql.connect(host='localhost', user='root', 
+                              passwd=password_db, db='indice', autocommit=True) 
     cursor = conexao.cursor()
-    cursor.execute('insert into palavra_localizacao (idurl, idpalavra, localizacao) values (%s, %s, %s)', (idurl, idpalavra, localizacao))
+    cursor.execute('INSERT INTO palavra_localizacao (idurl, idpalavra, localizacao) VALUES (%s, %s, %s)', (idurl, idpalavra, localizacao))
     idpalavra_localizacao = cursor.lastrowid
     cursor.close()
     conexao.close()
@@ -21,9 +22,11 @@ def insere_palavra_localizacao(idurl, idpalavra, localizacao):
 
 def insere_palavra(palavra):
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice', autocommit=True) 
+    conexao = pymysql.connect(host='localhost', user='root', 
+                              passwd=password_db, db='indice', autocommit=True,
+                              use_unicode=True, charset='utf8mb4') 
     cursor = conexao.cursor()
-    cursor.execute('insert into palavras (palavra) values (%s)', palavra)
+    cursor.execute('INSERT INTO palavras (palavra) VALUES (%s)', palavra)
     idpalavra = cursor.lastrowid
     cursor.close()
     conexao.close()
@@ -32,11 +35,13 @@ def insere_palavra(palavra):
 
 
 def palavra_indexada(palavra):
-    retorno = -1 #não existe a palavra no indice
+    retorno = -1 # Não existe a palavra no indice
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice', autocommit=True) 
+    conexao = pymysql.connect(host='localhost', user='root', 
+                              passwd=password_db, db='indice', autocommit=True,
+                              use_unicode=True, charset='utf8mb4') 
     cursor = conexao.cursor()
-    cursor.execute('select idpalavra from idpalavras where palavra %s', palavra)
+    cursor.execute('SELECT idpalavra FROM palavras WHERE palavra = %s', palavra)
     if cursor.rowcount > 0:
         retorno = cursor.fetchone()[0]
     cursor.close()
@@ -47,26 +52,28 @@ def palavra_indexada(palavra):
 
 def insere_pagina(url):
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice', autocommit=True) 
+    conexao = pymysql.connect(host='localhost', user='root', 
+                              passwd=password_db, db='indice', autocommit=True) 
     cursor = conexao.cursor()
-    cursor.execute('insert into urls (url) values (%s)', url)
-    idpagina = cursor.lastrowid
+    cursor.execute('INSERT INTO urls (url) VALUES (%s)', url)
+    id_pagina = cursor.lastrowid
     cursor.close()
     conexao.close()
     
-    return idpagina
+    return id_pagina
     
     
 def pagina_indexada(url):
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db, db='indice')   
-    retorno = -1 #não existe a pagina
+    conexao = pymysql.connect(host='localhost', user='root', 
+                              passwd=password_db, db='indice')   
+    retorno = -1 # Não existe a pagina
     cursor_url = conexao.cursor()
-    cursor_url.execute('select idurl from urls where url = %s', url)
+    cursor_url.execute('SELECT idurl FROM urls WHERE url = %s', url)
     if cursor_url.rowcount > 0:
         idurl = cursor_url.fetchone()[0]
         cursor_palavra = conexao.cursor()
-        cursor_palavra.execute('select idurl from palavra_localizacao where idurl = %s', idurl)
+        cursor_palavra.execute("SELECT idurl FROM palavra_localizacao WHERE idurl = %s", (idurl))
         if cursor_palavra.rowcount > 0:
             retorno = -2 # Existe pagina com palavras cadastradas
         else:
@@ -110,7 +117,7 @@ def indexador(url, sopa):
         
     texto = get_texto(sopa)
     palavras = separa_palavras(texto)
-    for i in range(palavras):
+    for i in range(len(palavras)):
         palavra = palavras[i]
         id_palavra = palavra_indexada(palavra)
         if id_palavra == -1:
@@ -122,9 +129,11 @@ def crawl(paginas, profundidade):
     for i in range(profundidade):
         novas_paginas = set()
         for pagina in paginas:
+            print(len(pagina))
             http = urllib3.PoolManager()
-            
             try:
+                if len(pagina) > 255:
+                    continue
                 dados_pagina = http.request('GET', pagina)
             except:
                 print('Erro ao abrir a pagina ' + pagina)
@@ -145,5 +154,6 @@ def crawl(paginas, profundidade):
                         novas_paginas.add(url)
             paginas = novas_paginas    
             
-            
+password_db         
 lista_paginas = ['https://pt.wikipedia.org/wiki/Linguagem_de_programa%C3%A7%C3%A3o']
+crawl(lista_paginas, 2)

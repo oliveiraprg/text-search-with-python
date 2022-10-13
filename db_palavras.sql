@@ -18,7 +18,7 @@ create table palavra_localizacao (
 	idpalavra_localizacao int not null auto_increment,
     idurl int not null,
     idpalavra int not null,
-    localicacao int,
+    localizacao int,
     constraint pk_idpalavra_localizacaoa primary key (idpalavra_localizacao),
     constraint fk_palavra_localizacao_url foreign key (idurl) references urls (idurl),
     constraint fk_palavra_localizacao_palavra  foreign key (idpalavra ) references palavras (idpalavra)

@@ -9,8 +9,8 @@ from secret_settings import password_db
 
 def insere_palavra_localizacao(idurl, idpalavra, localizacao):
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', 
-                              passwd=password_db, db='indice', autocommit=True) 
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice', autocommit=True) 
     cursor = conexao.cursor()
     cursor.execute('INSERT INTO palavra_localizacao (idurl, idpalavra, localizacao) VALUES (%s, %s, %s)', (idurl, idpalavra, localizacao))
     idpalavra_localizacao = cursor.lastrowid
@@ -22,8 +22,8 @@ def insere_palavra_localizacao(idurl, idpalavra, localizacao):
 
 def insere_palavra(palavra):
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', 
-                              passwd=password_db, db='indice', autocommit=True,
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice', autocommit=True,
                               use_unicode=True, charset='utf8mb4') 
     cursor = conexao.cursor()
     cursor.execute('INSERT INTO palavras (palavra) VALUES (%s)', palavra)
@@ -37,8 +37,8 @@ def insere_palavra(palavra):
 def palavra_indexada(palavra):
     retorno = -1 # Não existe a palavra no indice
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', 
-                              passwd=password_db, db='indice', autocommit=True,
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice', autocommit=True,
                               use_unicode=True, charset='utf8mb4') 
     cursor = conexao.cursor()
     cursor.execute('SELECT idpalavra FROM palavras WHERE palavra = %s', palavra)
@@ -52,8 +52,8 @@ def palavra_indexada(palavra):
 
 def insere_pagina(url):
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', 
-                              passwd=password_db, db='indice', autocommit=True) 
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice', autocommit=True) 
     cursor = conexao.cursor()
     cursor.execute('INSERT INTO urls (url) VALUES (%s)', url)
     id_pagina = cursor.lastrowid
@@ -65,8 +65,8 @@ def insere_pagina(url):
     
 def pagina_indexada(url):
     global password_db
-    conexao = pymysql.connect(host='localhost', user='root', 
-                              passwd=password_db, db='indice')   
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice')   
     retorno = -1 # Não existe a pagina
     cursor_url = conexao.cursor()
     cursor_url.execute('SELECT idurl FROM urls WHERE url = %s', url)
@@ -126,34 +126,43 @@ def indexador(url, sopa):
 
 
 def crawl(paginas, profundidade):
-    for i in range(profundidade):
+    i=0
+    while i < profundidade:
         novas_paginas = set()
-        for pagina in paginas:
-            print(len(pagina))
-            http = urllib3.PoolManager()
-            try:
-                if len(pagina) > 255:
-                    continue
-                dados_pagina = http.request('GET', pagina)
-            except:
-                print('Erro ao abrir a pagina ' + pagina)
-                continue
-                
-            sopa = BeautifulSoup(dados_pagina.data, 'lxml')
-            indexador(pagina, sopa)
-            links = sopa.find_all('a')
-            for link in links:
-        
-                if 'href' in link.attrs:
-                    url = urljoin(pagina, str(link.get('href')))
-                    #if url != link.get('href'):
-                    if url.find("'") != -1:
+        try:
+            for pagina in paginas:
+                print(len(pagina))
+                http = urllib3.PoolManager()
+                try:
+                    if len(pagina) > 255:
                         continue
-                    url = url.split('#')[0]
-                    if url[0:4] == 'http':
-                        novas_paginas.add(url)
-            paginas = novas_paginas    
+                    dados_pagina = http.request('GET', pagina)
+                except:
+                    print('Erro ao abrir a pagina ' + pagina)
+                    continue
+                    
+                sopa = BeautifulSoup(dados_pagina.data, 'lxml')
+                indexador(pagina, sopa)
+                links = sopa.find_all('a')
+                for link in links:
             
-password_db         
+                    if 'href' in link.attrs:
+                        url = urljoin(pagina, str(link.get('href')))
+                        #if url != link.get('href'):
+                        if url.find("'") != -1:
+                            continue
+                        url = url.split('#')[0]
+                        if url[0:4] == 'http':
+                            novas_paginas.add(url)
+        except:
+            print('Erro ao abrir a pagina ' + pagina)
+            continue
+        paginas = novas_paginas    
+        i += 1
+    print('Todas paginas percorridas')
+        
+        
+            
 lista_paginas = ['https://pt.wikipedia.org/wiki/Linguagem_de_programa%C3%A7%C3%A3o']
+
 crawl(lista_paginas, 2)

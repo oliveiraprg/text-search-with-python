@@ -98,6 +98,26 @@ def get_texto(sopa):
     return ' '.join(sopa.stripped_strings)
 
 
+def indexador(url, sopa):
+    indexada = pagina_indexada(url)
+    if indexada == -2:
+        print('Url já cadastrada')
+        return 
+    elif indexada == -1:
+        id_nova_pagina = insere_pagina(url)
+    elif indexada > 0:
+        id_nova_pagina = indexada
+        
+    texto = get_texto(sopa)
+    palavras = separa_palavras(texto)
+    for i in range(palavras):
+        palavra = palavras[i]
+        id_palavra = palavra_indexada(palavra)
+        if id_palavra == -1:
+            id_palavra = insere_palavra(palavra)
+        insere_palavra_localizacao(id_nova_pagina, id_palavra, i)
+
+
 def crawl(paginas, profundidade):
     for i in range(profundidade):
         novas_paginas = set()
@@ -111,6 +131,7 @@ def crawl(paginas, profundidade):
                 continue
                 
             sopa = BeautifulSoup(dados_pagina.data, 'lxml')
+            indexador(pagina, sopa)
             links = sopa.find_all('a')
             for link in links:
         

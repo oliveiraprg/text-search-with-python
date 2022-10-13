@@ -132,7 +132,6 @@ def crawl(paginas, profundidade):
         try:
             for pagina in paginas:
                 if len(pagina) <= 255:
-                    print(pagina)
                     http = urllib3.PoolManager()
                     try:
                         dados_pagina = http.request('GET', pagina)
@@ -158,8 +157,7 @@ def crawl(paginas, profundidade):
         i += 1
     print('Todas paginas percorridas')
         
-        
-            
+    
 lista_paginas = ['https://pt.wikipedia.org/wiki/Linguagem_de_programa%C3%A7%C3%A3o']
 
 crawl(lista_paginas, 2)

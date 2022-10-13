@@ -131,29 +131,26 @@ def crawl(paginas, profundidade):
         novas_paginas = set()
         try:
             for pagina in paginas:
-                print(len(pagina))
-                http = urllib3.PoolManager()
-                try:
-                    if len(pagina) > 255:
+                if len(pagina) <= 255:
+                    print(pagina)
+                    http = urllib3.PoolManager()
+                    try:
+                        dados_pagina = http.request('GET', pagina)
+                    except:
+                        print('Erro ao abrir a url ' + pagina)
                         continue
-                    dados_pagina = http.request('GET', pagina)
-                except:
-                    print('Erro ao abrir a pagina ' + pagina)
-                    continue
-                    
-                sopa = BeautifulSoup(dados_pagina.data, 'lxml')
-                indexador(pagina, sopa)
-                links = sopa.find_all('a')
-                for link in links:
-            
-                    if 'href' in link.attrs:
-                        url = urljoin(pagina, str(link.get('href')))
-                        #if url != link.get('href'):
-                        if url.find("'") != -1:
-                            continue
-                        url = url.split('#')[0]
-                        if url[0:4] == 'http':
-                            novas_paginas.add(url)
+                        
+                    sopa = BeautifulSoup(dados_pagina.data, 'lxml')
+                    indexador(pagina, sopa)
+                    links = sopa.find_all('a')
+                    for link in links:
+                        if 'href' in link.attrs:
+                            url = urljoin(pagina, str(link.get('href')))
+                            if url.find("'") != -1:
+                                continue
+                            url = url.split('#')[0]
+                            if url[0:4] == 'http':
+                                novas_paginas.add(url)
         except:
             print('Erro ao abrir a pagina ' + pagina)
             continue

@@ -1,8 +1,8 @@
 import nltk
 import pymysql
 from secret_settings import password_db
-
-
+       
+    
 def get_id_palavra(palavra):
     retorno = -1
     stemmer = nltk.RSLPStemmer()
@@ -30,6 +30,42 @@ def busca_uma_palavra(palavra):
         print(url)
     cursor.close()
     conexao.close()
+    
+
+def busca_mais_palavras(consulta):
+    lista_campos = 'p1.idurl'
+    lista_tabelas = ''
+    lista_clausulas = ''
+    palavras_id = []
+    
+    palavras = consulta.split(' ')
+    numero_tabela = 1
+    for palavra in palavras:
+        id_palavra = get_id_palavra(palavra)
+        if id_palavra> 0:
+            palavras_id.append(id_palavra)
+            if numero_tabela > 1:
+                lista_tabelas += ', '
+                lista_clausulas += ' AND '
+                lista_clausulas += 'p%d.idurl = p%d.idurl and ' % (numero_tabela -1, numero_tabela)
+            lista_campos += ', p%d.localizacao' % numero_tabela
+            lista_tabelas += ' palavra_localizacao p%d' % numero_tabela
+            lista_clausulas += 'p%d.idpalavra = %d' % (numero_tabela, id_palavra)
+            numero_tabela += 1
+    consulta_completa = 'SELECT %s FROM %s WHERE %s' %(lista_campos, lista_tabelas, lista_clausulas)
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                          port=3306, db='indice')
+    cursor = conexao.cursor()
+    cursor.execute(consulta_completa)
+    
+    linhas = [linha for linha in cursor]
+    
+    cursor.close()
+    conexao.close()
+    
+    return linhas, palavras_id
 
 
+
+linhas, palavras_id = busca_mais_palavras('python programação')
 busca_uma_palavra('python')

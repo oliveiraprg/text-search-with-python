@@ -62,6 +62,37 @@ def insere_url_palavra(id_palavra, id_url_ligacao):
     return id_url_palavra
 
 
+def get_url_ligacao(id_url_origem, id_url_destino):
+    id_url_ligacao = -1
+    global password_db
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice') 
+    cursor = conexao.cursor()
+    cursor.execute('SELECT idurl_ligacao FROM url_ligacao WHERE idurl_origem = %s AND idurl_destino = %s', (id_url_origem, id_url_destino))
+    if cursor.rowcount > 0:
+        id_url_ligacao = cursor.fetchone()[0]
+    cursor.close()
+    conexao.close()
+    
+    return id_url_ligacao
+
+
+def get_id_url(url):
+    id_url = -1 # Não existe a palavra no indice
+    global password_db
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice', autocommit=True,
+                              use_unicode=True, charset='utf8mb4') 
+    cursor = conexao.cursor()
+    cursor.execute('SELECT idurl FROM urls WHERE url = %s', url)
+    if cursor.rowcount > 0:
+        id_url = cursor.fetchone()[0]
+    cursor.close()
+    conexao.close()
+    
+    return id_url
+
+
 def palavra_indexada(palavra):
     retorno = -1 # Não existe a palavra no indice
     global password_db
@@ -81,7 +112,8 @@ def palavra_indexada(palavra):
 def insere_pagina(url):
     global password_db
     conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
-                              port=3306, db='indice', autocommit=True) 
+                              port=3306, db='indice', autocommit=True,
+                              use_unicode=True, charset='utf8mb4') 
     cursor = conexao.cursor()
     cursor.execute('INSERT INTO urls (url) VALUES (%s)', url)
     id_pagina = cursor.lastrowid
@@ -188,4 +220,4 @@ def crawl(paginas, profundidade):
     
 lista_paginas = ['https://pt.wikipedia.org/wiki/Linguagem_de_programa%C3%A7%C3%A3o']
 
-crawl(lista_paginas, 2)
+#crawl(lista_paginas, 2)

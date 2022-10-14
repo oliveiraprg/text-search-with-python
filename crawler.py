@@ -34,6 +34,34 @@ def insere_palavra(palavra):
     return idpalavra
 
 
+def insere_url_ligacao(id_url_origem, id_url_destino):
+    global password_db
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice', autocommit=True,
+                              use_unicode=True, charset='utf8mb4') 
+    cursor = conexao.cursor()
+    cursor.execute('INSERT INTO url_ligacao (idurl_origem, idurl_destino) VALUES (%s, %s)', (id_url_origem, id_url_destino))
+    id_url_ligacao = cursor.lastrowid
+    cursor.close()
+    conexao.close()
+    
+    return id_url_ligacao
+
+
+def insere_url_palavra(id_palavra, id_url_ligacao):
+    global password_db
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice', autocommit=True,
+                              use_unicode=True, charset='utf8mb4') 
+    cursor = conexao.cursor()
+    cursor.execute('INSERT INTO url_palavra (idpalavra, idurl_ligacao) VALUES (%s, %s)', (id_palavra, id_url_ligacao))
+    id_url_palavra = cursor.lastrowid
+    cursor.close()
+    conexao.close()
+    
+    return id_url_palavra
+
+
 def palavra_indexada(palavra):
     retorno = -1 # Não existe a palavra no indice
     global password_db

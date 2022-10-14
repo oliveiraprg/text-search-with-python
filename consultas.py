@@ -74,6 +74,7 @@ def get_url(id_url):
     return retorno
 
 
+#Calcula o score com base na frequencia que as palavras aparecem no documento
 def frequencia_score(linhas):
     contagem = dict([linha[0], 0] for linha in linhas)
     for linha in linhas:
@@ -81,6 +82,7 @@ def frequencia_score(linhas):
     return contagem
 
 
+# Calcula o score com base na posição das palavras no documento, quanto mais no inicio, melhor
 def localizacao_score(linhas):
      localizacoes = dict([linha[0], 1000000] for linha in linhas)
      for linha in linhas:
@@ -90,9 +92,23 @@ def localizacao_score(linhas):
      return localizacoes   
 
 
+# Calcula o score com base na distancia entre as palavras, quanto menor, melhor
+def distancia_score(linhas):
+    if len(linhas[0]) <= 2:
+        return dict([(linha[0], 1.0) for linha in linhas])
+    distancias = dict([(linha[0], 1000000) for linha in linhas])
+    for linha in linhas:
+        distancia = sum([abs(linha[i] - linha[i - 1]) for i in range(2, len(linha))])
+        if distancia < distancias[linha[0]]:
+            distancias[linha[0]] = distancia
+    return distancias
+
+
 def pesquisa(consulta):
     linhas, palavras_id = busca_mais_palavras(consulta)
-    scores = localizacao_score(linhas)
+    #scores = frequencia_score(linhas)
+    #scores = localizacao_score(linhas)
+    scores = distancia_score(linhas)
     scores_ordenados = sorted([(score, url) for (url, score) in scores.items()], reverse = 0)
     for (score, id_url) in scores_ordenados[0:10]:
         print('%f\t%s' % (score, get_url(id_url)))
@@ -100,5 +116,3 @@ def pesquisa(consulta):
 
 linhas, palavra_id = busca_mais_palavras('python programação')
 pesquisa('python programação')
-localizacao_score(linhas)
-#busca_uma_palavra('python')

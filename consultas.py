@@ -126,6 +126,41 @@ def links_score(linhas):
     return contagem
 
 
+def calcula_page_rank(interacoes):
+    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db,
+                              port=3306, db='indice', autocommit=True,
+                              use_unicode=True, charset='utf8mb4')
+    cursor_limpa_tablea = conexao.cursor()
+    cursor_limpa_tablea.execute('DELETE FROM page_rank')
+    cursor_limpa_tablea.execute('INSERT INTO page_rank SELECT idurl, 1.0 from urls ')
+    for i in range(interacoes):
+        cursor_url = conexao.cursor()
+        cursor_url.execute(('SELECT idurl FROM urls'))
+        for url in cursor_url:
+            pr = 0.15 
+            cursor_links = conexao.cursor()
+            cursor_links.execute(('SELECT distinct(idurl_origem) FROM idurl_ligacao WHERE irurl_destino = %s', url[0]))
+            for link in cursor_links:
+                cursor_page_rank = conexao.cursor()
+                cursor_page_rank.execute(('SELECT nota FROM page_rank WHERE irurl = %s', link[0]))
+                link_page_rank = cursor_page_rank.fetchone()[0]
+                cursor_quatidade_conexao = conexao.cursor()
+                cursor_quatidade_conexao.execute('SELECT COUNT(*) FROM url_ligacao WHERE idurl_origem = %s', link[0])
+                link_quantidade = cursor_quatidade_conexao.fetchone()[0]
+                pr += 0.85 * (link_page_rank/link_quantidade)
+            cursor_atualizas = conexao.cursor()
+            cursor_atualizas.execute('UPDATE page_rank SET nota = %s WHERE idurl = %s', (pr, url[0]))
+                
+                
+    cursor_atualizas.close()                 
+    cursor_quatidade_conexao.close() 
+    cursor_page_rank.close()
+    cursor_links.close()
+    cursor_url.close()
+    cursor_limpa_tablea.close()
+    conexao.close()
+    
+
 def pesquisa(consulta):
     linhas, palavras_id = busca_mais_palavras(consulta)
     #scores = frequencia_score(linhas)

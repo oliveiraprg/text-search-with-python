@@ -93,14 +93,10 @@ def localizacao_score(linhas):
 def pesquisa(consulta):
     linhas, palavras_id = busca_mais_palavras(consulta)
     scores = localizacao_score(linhas)
-    scores_ordenados = sorted([(score, url) for (url, score) in scores.items()], reverse = 1)
+    scores_ordenados = sorted([(score, url) for (url, score) in scores.items()], reverse = 0)
     for (score, id_url) in scores_ordenados[0:10]:
         print('%f\t%s' % (score, get_url(id_url)))
         
-
-
-        
-
 
 linhas, palavra_id = busca_mais_palavras('python programação')
 pesquisa('python programação')

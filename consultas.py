@@ -12,8 +12,7 @@ def get_id_palavra(palavra):
     cursor.execute('SELECT idpalavra from palavras where palavra = %s', stemmer.stem(palavra))
     if cursor.rowcount > 0: retorno = cursor.fetchone()[0]
     cursor.close()
-    conexao.close()
-    
+    conexao.close() 
     return retorno
 
 
@@ -57,12 +56,9 @@ def busca_mais_palavras(consulta):
                           port=3306, db='indice')
     cursor = conexao.cursor()
     cursor.execute(consulta_completa)
-    
     linhas = [linha for linha in cursor]
-    
     cursor.close()
     conexao.close()
-    
     return linhas, palavras_id
 
 
@@ -75,9 +71,26 @@ def get_url(id_url):
     if cursor.rowcount > 0: retorno = cursor.fetchone()[0]
     cursor.close()
     conexao.close()
-    
     return retorno
 
 
-linhas, palavras_id = busca_mais_palavras('python programação')
-busca_uma_palavra('python')
+def frequencia_score(linhas):
+    contagem = dict([linha[0], 0] for linha in linhas)
+    for linha in linhas:
+        contagem[linha[0]] += 1
+    return contagem
+    
+
+def pesquisa(consulta):
+    linhas, palavras_id = busca_mais_palavras(consulta)
+    scores = frequencia_score(linhas)
+    #scores = dict([linha[0], 0] for linha in linhas)
+    
+    scores_ordenados = sorted([(score, url) for (url, score) in scores.items()], reverse = 1)
+    for (score, id_url) in scores_ordenados[0:10]:
+        print('%f\t%s' % (score, get_url(id_url)))
+        
+        
+
+pesquisa('python programação')
+#busca_uma_palavra('python')

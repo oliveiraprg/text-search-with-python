@@ -7,17 +7,17 @@ import pymysql
 from secret_settings import password_db
 
 
-def insere_palavra_localizacao(idurl, idpalavra, localizacao):
+def insere_palavra_localizacao(id_url, id_palavra, localizacao):
     global password_db
     conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
                               port=3306, db='indice', autocommit=True) 
     cursor = conexao.cursor()
-    cursor.execute('INSERT INTO palavra_localizacao (idurl, idpalavra, localizacao) VALUES (%s, %s, %s)', (idurl, idpalavra, localizacao))
-    idpalavra_localizacao = cursor.lastrowid
+    cursor.execute('INSERT INTO palavra_localizacao (idurl, idpalavra, localizacao) VALUES (%s, %s, %s)', (id_url, id_palavra, localizacao))
+    id_palavra_localizacao = cursor.lastrowid
     cursor.close()
     conexao.close()
     
-    return idpalavra_localizacao
+    return id_palavra_localizacao
 
 
 def insere_palavra(palavra):
@@ -27,11 +27,11 @@ def insere_palavra(palavra):
                               use_unicode=True, charset='utf8mb4') 
     cursor = conexao.cursor()
     cursor.execute('INSERT INTO palavras (palavra) VALUES (%s)', palavra)
-    idpalavra = cursor.lastrowid
+    id_palavra = cursor.lastrowid
     cursor.close()
     conexao.close()
     
-    return idpalavra
+    return id_palavra
 
 
 def insere_url_ligacao(id_url_origem, id_url_destino):
@@ -94,7 +94,7 @@ def get_id_url(url):
 
 
 def palavra_indexada(palavra):
-    retorno = -1 # Não existe a palavra no indice
+    id_palavra = -1 # Não existe a palavra no indice
     global password_db
     conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
                               port=3306, db='indice', autocommit=True,
@@ -102,11 +102,11 @@ def palavra_indexada(palavra):
     cursor = conexao.cursor()
     cursor.execute('SELECT idpalavra FROM palavras WHERE palavra = %s', palavra)
     if cursor.rowcount > 0:
-        retorno = cursor.fetchone()[0]
+        id_palavra = cursor.fetchone()[0]
     cursor.close()
     conexao.close()
     
-    return retorno
+    return id_palavra
 
 
 def insere_pagina(url):
@@ -157,6 +157,21 @@ def separa_palavras(texto):
             if len(palavra) > 1:
                 lista_palavras.append(stemmer.stem(palavra).lower())
     return lista_palavras
+
+
+def url_ligacao_palavra(url_origem, url_destino):
+    texto_url = url_destino.replace('_', ' ')
+    palavras = separa_palavras(texto_url)
+    id_url_origem = get_id_url(url_origem)
+    id_url_destino = get_id_url(url_destino)
+    if id_url_destino == -1: id_url_destino = insere_pagina(url_destino)
+    if id_url_origem == id_url_destino: return
+    if get_url_ligacao(id_url_origem, id_url_destino) > 0: return
+    id_url_ligacao = insere_url_ligacao(id_url_origem, id_url_destino)
+    for palavra in palavras:
+        id_palavra = palavra_indexada(palavra)
+        if id_palavra == -1: id_palavra = insere_palavra(palavra)
+        insere_url_palavra(id_palavra, id_url_ligacao)
 
 
 def get_texto(sopa):
@@ -210,6 +225,7 @@ def crawl(paginas, profundidade):
                             url = url.split('#')[0]
                             if url[0:4] == 'http':
                                 novas_paginas.add(url)
+                                url_ligacao_palavra(pagina, url)
         except:
             print('Erro ao abrir a pagina ' + pagina)
             continue

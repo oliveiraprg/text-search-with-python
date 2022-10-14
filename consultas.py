@@ -161,12 +161,27 @@ def calcula_page_rank(interacoes):
     conexao.close()
     
 
+def page_rank_score(linhas):
+    page_ranks = dict([(linha[0], 1.0) for linha in linhas])
+    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db,
+                              port=3306, db='indice')
+    cursor = conexao.cursor()
+    for indice in page_ranks:
+        cursor.execute(
+            'SELECT nota FROM page_rank WHERE idurl = %s', indice)
+        page_ranks[indice] = cursor.fetchone()[0]
+    cursor.close()
+    conexao.close()
+    return page_ranks    
+    
+    
 def pesquisa(consulta):
     linhas, palavras_id = busca_mais_palavras(consulta)
     #scores = frequencia_score(linhas)
     #scores = localizacao_score(linhas)
     #scores = distancia_score(linhas)
-    scores = links_score(linhas)
+    #scores = links_score(linhas)
+    scores = page_rank_score(linhas)
     scores_ordenados = sorted([(score, url)
                               for (url, score) in scores.items()], reverse=1)
     for (score, id_url) in scores_ordenados[0:10]:

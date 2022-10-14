@@ -66,6 +66,18 @@ def busca_mais_palavras(consulta):
     return linhas, palavras_id
 
 
+def get_url(id_url):
+    retorno = ''
+    conexao = pymysql.connect(host='localhost', user='root',passwd=password_db,
+                              port=3306, db='indice')
+    cursor = conexao.cursor()
+    cursor.execute('SELECT url from urls WHERE idurl = %s',id_url)
+    if cursor.rowcount > 0: retorno = cursor.fetchone()[0]
+    cursor.close()
+    conexao.close()
+    
+    return retorno
+
 
 linhas, palavras_id = busca_mais_palavras('python programação')
 busca_uma_palavra('python')

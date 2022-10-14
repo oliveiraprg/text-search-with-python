@@ -79,18 +79,30 @@ def frequencia_score(linhas):
     for linha in linhas:
         contagem[linha[0]] += 1
     return contagem
-    
+
+
+def localizacao_score(linhas):
+     localizacoes = dict([linha[0], 1000000] for linha in linhas)
+     for linha in linhas:
+         soma = sum(linha[1:])
+         if soma < localizacoes[linha[0]]:
+             localizacoes[linha[0]] = soma
+     return localizacoes   
+
 
 def pesquisa(consulta):
     linhas, palavras_id = busca_mais_palavras(consulta)
-    scores = frequencia_score(linhas)
-    #scores = dict([linha[0], 0] for linha in linhas)
-    
+    scores = localizacao_score(linhas)
     scores_ordenados = sorted([(score, url) for (url, score) in scores.items()], reverse = 1)
     for (score, id_url) in scores_ordenados[0:10]:
         print('%f\t%s' % (score, get_url(id_url)))
         
+
+
         
 
+
+linhas, palavra_id = busca_mais_palavras('python programação')
 pesquisa('python programação')
+localizacao_score(linhas)
 #busca_uma_palavra('python')

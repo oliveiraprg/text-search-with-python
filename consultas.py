@@ -132,34 +132,38 @@ def calcula_page_rank(interacoes):
                               use_unicode=True, charset='utf8mb4')
     cursor_limpa_tablea = conexao.cursor()
     cursor_limpa_tablea.execute('DELETE FROM page_rank')
-    cursor_limpa_tablea.execute('INSERT INTO page_rank SELECT idurl, 1.0 from urls ')
+    cursor_limpa_tablea.execute(
+        'INSERT INTO page_rank SELECT idurl, 1.0 from urls ')
     for i in range(interacoes):
         cursor_url = conexao.cursor()
         cursor_url.execute(('SELECT idurl FROM urls'))
         for url in cursor_url:
-            pr = 0.15 
+            pr = 0.15
             cursor_links = conexao.cursor()
-            cursor_links.execute(('SELECT distinct(idurl_origem) FROM idurl_ligacao WHERE irurl_destino = %s', url[0]))
+            cursor_links.execute(
+                ('SELECT distinct(idurl_origem) FROM idurl_ligacao WHERE irurl_destino = %s', url[0]))
             for link in cursor_links:
                 cursor_page_rank = conexao.cursor()
-                cursor_page_rank.execute(('SELECT nota FROM page_rank WHERE irurl = %s', link[0]))
+                cursor_page_rank.execute(
+                    ('SELECT nota FROM page_rank WHERE irurl = %s', link[0]))
                 link_page_rank = cursor_page_rank.fetchone()[0]
                 cursor_quatidade_conexao = conexao.cursor()
-                cursor_quatidade_conexao.execute('SELECT COUNT(*) FROM url_ligacao WHERE idurl_origem = %s', link[0])
+                cursor_quatidade_conexao.execute(
+                    'SELECT COUNT(*) FROM url_ligacao WHERE idurl_origem = %s', link[0])
                 link_quantidade = cursor_quatidade_conexao.fetchone()[0]
                 pr += 0.85 * (link_page_rank/link_quantidade)
             cursor_atualizas = conexao.cursor()
-            cursor_atualizas.execute('UPDATE page_rank SET nota = %s WHERE idurl = %s', (pr, url[0]))
-                
-                
-    cursor_atualizas.close()                 
-    cursor_quatidade_conexao.close() 
+            cursor_atualizas.execute(
+                'UPDATE page_rank SET nota = %s WHERE idurl = %s', (pr, url[0]))
+
+    cursor_atualizas.close()
+    cursor_quatidade_conexao.close()
     cursor_page_rank.close()
     cursor_links.close()
     cursor_url.close()
     cursor_limpa_tablea.close()
     conexao.close()
-    
+
 
 def page_rank_score(linhas):
     page_ranks = dict([(linha[0], 1.0) for linha in linhas])
@@ -172,21 +176,45 @@ def page_rank_score(linhas):
         page_ranks[indice] = cursor.fetchone()[0]
     cursor.close()
     conexao.close()
-    return page_ranks    
-    
-    
+    return page_ranks
+
+
+def texto_link_score(linhas, palavras_id):
+    contagem = dict([(linha[0], 0) for linha in linhas])
+    conexao = pymysql.connect(host='localhost', user='root', passwd=password_db,
+                              port=3306, db='indice')
+    for indice_palavra in palavras_id:
+        cursor = conexao.cursor()
+        cursor.execute(
+            'SELECT ul.idurl_origem, ul.idurl_destino FROM url_palavra up INNER JOIN url_ligacao ul ON up.idurl_ligacao = ul.idurl_ligacao WHERE up.idpalavra = %s', indice_palavra)
+        contagem[indice_palavra] = cursor.fetchone()[0]
+        for(id_url_origem, id_url_destino) in cursor:
+            if id_url_destino in contagem:
+                cursor_rank = conexao.cursor()
+                cursor_rank.execute(
+                    'SELECT nota FROM page_rank WHERE idurl = %s', id_url_origem)
+                pr = cursor_rank.fetchone()[0]
+                contagem[id_url_destino] += pr
+
+    cursor_rank.close()
+    cursor.close()
+    conexao.close()
+    return contagem
+
+
 def pesquisa(consulta):
     linhas, palavras_id = busca_mais_palavras(consulta)
     #scores = frequencia_score(linhas)
     #scores = localizacao_score(linhas)
     #scores = distancia_score(linhas)
     #scores = links_score(linhas)
-    scores = page_rank_score(linhas)
+    #scores = page_rank_score(linhas)
+    scores = texto_link_score(linhas, palavras_id)
+
     scores_ordenados = sorted([(score, url)
                               for (url, score) in scores.items()], reverse=1)
     for (score, id_url) in scores_ordenados[0:10]:
         print('%f\t%s' % (score, get_url(id_url)))
 
 
-linhas, palavra_id = busca_mais_palavras('python programação')
 pesquisa('python programação')

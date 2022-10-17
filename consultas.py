@@ -11,6 +11,14 @@ def normaliza_maior(notas):
     return dict([(id, float(nota)/maximo) for (id, nota) in notas.items()])
 
 
+def normaliza_menor(notas):
+    menor = 0.0001
+    minimo = min(notas.values())
+    if menor == 0:
+        menor = menor
+    return dict([(id, float(minimo) / max(menor,nota)) for (id, nota) in notas.items()])
+
+
 def get_id_palavra(palavra):
     retorno = -1
     stemmer = nltk.RSLPStemmer()
@@ -104,7 +112,7 @@ def localizacao_score(linhas):
         soma = sum(linha[1:])
         if soma < localizacoes[linha[0]]:
             localizacoes[linha[0]] = soma
-    return localizacoes
+    return normaliza_menor(localizacoes)
 
 
 # Calcula o score com base na distancia entre as palavras, quanto menor, melhor
@@ -117,7 +125,7 @@ def distancia_score(linhas):
                         for i in range(2, len(linha))])
         if distancia < distancias[linha[0]]:
             distancias[linha[0]] = distancia
-    return distancias
+    return normaliza_menor(distancias)
 
 
 def links_score(linhas):
@@ -131,7 +139,7 @@ def links_score(linhas):
         contagem[indice] = cursor.fetchone()[0]
     cursor.close()
     conexao.close()
-    return contagem
+    return normaliza_maior(contagem)
 
 
 def calcula_page_rank(interacoes):
@@ -184,7 +192,7 @@ def page_rank_score(linhas):
         page_ranks[indice] = cursor.fetchone()[0]
     cursor.close()
     conexao.close()
-    return page_ranks
+    return normaliza_maior(page_ranks)
 
 
 def texto_link_score(linhas, palavras_id):
@@ -207,17 +215,17 @@ def texto_link_score(linhas, palavras_id):
     cursor_rank.close()
     cursor.close()
     conexao.close()
-    return contagem
+    return normaliza_maior(contagem)
     
     
 def pesquisa(consulta):
     linhas, palavras_id = busca_mais_palavras(consulta)
-    scores = frequencia_score(linhas)
+    #scores = frequencia_score(linhas)
     #scores = localizacao_score(linhas)
     #scores = distancia_score(linhas)
     #scores = links_score(linhas)
     #scores = page_rank_score(linhas)
-    #scores = texto_link_score(linhas, palavras_id)
+    scores = texto_link_score(linhas, palavras_id)
 
     scores_ordenados = sorted([(score, url)
                               for (url, score) in scores.items()], reverse=1)

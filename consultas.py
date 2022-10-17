@@ -16,7 +16,7 @@ def normaliza_menor(notas):
     minimo = min(notas.values())
     if menor == 0:
         menor = menor
-    return dict([(id, float(minimo) / max(menor,nota)) for (id, nota) in notas.items()])
+    return dict([(id, float(minimo) / max(menor, nota)) for (id, nota) in notas.items()])
 
 
 def get_id_palavra(palavra):
@@ -216,16 +216,16 @@ def texto_link_score(linhas, palavras_id):
     cursor.close()
     conexao.close()
     return normaliza_maior(contagem)
-    
-    
+
+
 def pesquisa(consulta):
     linhas, palavras_id = busca_mais_palavras(consulta)
     #scores = frequencia_score(linhas)
     #scores = localizacao_score(linhas)
     #scores = distancia_score(linhas)
     #scores = links_score(linhas)
-    #scores = page_rank_score(linhas)
-    scores = texto_link_score(linhas, palavras_id)
+    scores = page_rank_score(linhas)
+    #scores = texto_link_score(linhas, palavras_id)
 
     scores_ordenados = sorted([(score, url)
                               for (url, score) in scores.items()], reverse=1)
@@ -233,4 +233,23 @@ def pesquisa(consulta):
         print('%f\t%s' % (score, get_url(id_url)))
 
 
-pesquisa('python programação')
+def pesquisa_peso(consulta):
+    linhas, palavras_id = busca_mais_palavras(consulta)
+    total_scores = dict([linha[0], 0] for linha in linhas)
+    pesos = [(1.0, frequencia_score(linhas)),
+             (0.8, localizacao_score(linhas)),
+             (0.5, distancia_score(linhas)),
+             (0.9, links_score(linhas)),
+             (1.0, page_rank_score(linhas)),
+             (0.7, texto_link_score(linhas, palavras_id))]
+    for (peso, scores) in pesos:
+        for url in total_scores:
+            total_scores[url] += peso * scores[url]
+    total_scores = normaliza_maior(total_scores)
+    scores_ordenados = sorted([(score, url)
+                              for (url, score) in total_scores.items()], reverse=1)
+    for (score, id_url) in scores_ordenados[0:10]:
+        print('%f\t%s' % (score, get_url(id_url)))
+
+
+pesquisa_peso('python programação')

@@ -3,6 +3,14 @@ import pymysql
 from secret_settings import password_db
 
 
+def normaliza_maior(notas):
+    menor = 0.0001
+    maximo = max(notas.values())
+    if maximo == 0:
+        maximo = menor
+    return dict([(id, float(nota)/maximo) for (id, nota) in notas.items()])
+
+
 def get_id_palavra(palavra):
     retorno = -1
     stemmer = nltk.RSLPStemmer()
@@ -86,7 +94,7 @@ def frequencia_score(linhas):
     contagem = dict([linha[0], 0] for linha in linhas)
     for linha in linhas:
         contagem[linha[0]] += 1
-    return contagem
+    return normaliza_maior(contagem)
 
 
 # Calcula o score com base na posição das palavras no documento, quanto mais no inicio, melhor
@@ -200,16 +208,16 @@ def texto_link_score(linhas, palavras_id):
     cursor.close()
     conexao.close()
     return contagem
-
-
+    
+    
 def pesquisa(consulta):
     linhas, palavras_id = busca_mais_palavras(consulta)
-    #scores = frequencia_score(linhas)
+    scores = frequencia_score(linhas)
     #scores = localizacao_score(linhas)
     #scores = distancia_score(linhas)
     #scores = links_score(linhas)
     #scores = page_rank_score(linhas)
-    scores = texto_link_score(linhas, palavras_id)
+    #scores = texto_link_score(linhas, palavras_id)
 
     scores_ordenados = sorted([(score, url)
                               for (url, score) in scores.items()], reverse=1)
